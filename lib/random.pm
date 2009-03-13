@@ -6,7 +6,7 @@ use 5.010;
 
 =head1 NAME
 
-random - have rand() return integers
+random - have rand() return integers or fixed values
 
 =head1 VERSION
 
@@ -14,20 +14,28 @@ Version 0.01
 
 =cut
 
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
 
 =head1 SYNOPSIS
+
+    use random;
+
+    my $dice = 1 + rand 6; # one of 1 .. 6
+
+    # or
+    use random qw(integer);
+
+    my $dice = 1 + rand 6; # one of 1 .. 6
 
     use random qw(fixed 6); # cheat on dice
 
     my $six = rand; # 6
 
-    use random qw(integer);
-
-    my $dice = 1 + rand 6; # one of 1 .. 6
 
 =head1 EXPORT
+
+Nothing.
 
 =head1 FUNCTIONS
 
@@ -40,7 +48,7 @@ sub import   {
     my %args = @_<=1? ( "integer" => 1) :  @_;
     
     $^H{random} =  $args{fixed}   ? $args{fixed} 
-                :  $args{integer} ? -1 
+                :  $args{integer} ? -123456789
                 :  undef;
 return
 }
@@ -55,23 +63,27 @@ sub unimport {
 }
 
 =head2 rand
-  when random is in effect it returns int(rand)
-  otherwise CORE::rand
+
+when random (integer) is in effect it returns int(rand)
+
+when random (fixed) is in effect it returns the fixed value
+
+otherwise CORE::rand
+
 =cut
 
 sub rand {
      my $ctrl_h = ( caller 0 )[10];
      my $param = $_[0] // 1;
-     if ( not defined $ctrl_h->{random}) {
+     if ( !defined $ctrl_h->{random}) {
          return CORE::rand($param);
      }
-     elsif ( $ctrl_h->{random} eq -1 ){
+     elsif ( -123456789 eq $ctrl_h->{random} ){
          return int($param * CORE::rand);
      } 
-     elsif ( $ctrl_h->{random} gt 0 ){
+     else { 
          return $ctrl_h->{random};
-     } 
-return CORE::rand($param);
+     }
 }
 
 BEGIN {
@@ -89,7 +101,7 @@ Please report any bugs or feature requests to C<bug-random at rt.cpan.org>, or t
 the web interface at L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=random>.  I will be notified, and then you'll
 automatically be notified of progress on your bug as I make changes.
 
-
+The fixed value -123456789 doesn't work. The value is reserved to make the integer option work.
 
 
 =head1 SUPPORT
